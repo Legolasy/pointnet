@@ -1,11 +1,14 @@
 import os
 import sys
 import numpy as np
-import h5py
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+import h5py   #h5py库 存放两类对象的容器，数据集(dataset)和组(group)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))#文件根目录
 sys.path.append(BASE_DIR)
 
 # Download dataset for point cloud classification
+#下载点云分类（3D Object Classification）相关的数据集modelnet40_ply_hdf5_2048
+#只是做点云语义分割则不需要下载这一数据集
+#可注释掉本段
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
@@ -16,7 +19,8 @@ if not os.path.exists(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048')):
     os.system('mv %s %s' % (zipfile[:-4], DATA_DIR))
     os.system('rm %s' % (zipfile))
 
-
+#B：batch_size N：num_points    
+#shuffle_data(data, labels) 函数用来在B这个维度上随机打乱数据
 def shuffle_data(data, labels):
     """ Shuffle data and labels.
         Input:
@@ -29,7 +33,8 @@ def shuffle_data(data, labels):
     np.random.shuffle(idx)
     return data[idx, ...], labels[idx], idx
 
-
+#绕竖直轴随机旋转点云，作为数据集增强的一部分
+#不希望同一个物体由于角度的不同采集到的点云坐标不同导致不同的分类
 def rotate_point_cloud(batch_data):
     """ Randomly rotate the point clouds to augument the dataset
         rotation is per shape based along up direction
@@ -50,7 +55,8 @@ def rotate_point_cloud(batch_data):
         rotated_data[k, ...] = np.dot(shape_pc.reshape((-1, 3)), rotation_matrix)
     return rotated_data
 
-
+#功能类似上一个
+#可以指定旋转角度
 def rotate_point_cloud_by_angle(batch_data, rotation_angle):
     """ Rotate the point cloud along up direction with certain angle.
         Input:
@@ -70,7 +76,8 @@ def rotate_point_cloud_by_angle(batch_data, rotation_angle):
         rotated_data[k, ...] = np.dot(shape_pc.reshape((-1, 3)), rotation_matrix)
     return rotated_data
 
-
+#在原始点云数据集上通过标准正太分布（np.random.randn()）添加噪声，作为数据集增强的一种。
+#噪声数据用np.clip()函数限幅。默认是在点的每一个维度（C：Channel）上添加噪声，也可以按需要修改代码。
 def jitter_point_cloud(batch_data, sigma=0.01, clip=0.05):
     """ Randomly jitter points. jittering is per point.
         Input:
@@ -84,6 +91,7 @@ def jitter_point_cloud(batch_data, sigma=0.01, clip=0.05):
     jittered_data += batch_data
     return jittered_data
 
+#下面五个函数用于加载h5py格式的数据集
 def getDataFiles(list_filename):
     return [line.rstrip() for line in open(list_filename)]
 
