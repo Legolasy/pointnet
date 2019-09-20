@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-import h5py   #h5py库 存放两类对象的容器，数据集(dataset)和组(group)
+import h5py   #h5py库 存放两类对象的容器，数据集(dataset)和组(group)——类似字典
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))#文件根目录
 sys.path.append(BASE_DIR)
 
